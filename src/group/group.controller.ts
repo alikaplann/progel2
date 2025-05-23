@@ -7,13 +7,16 @@ import {
   Patch,
   Delete,
   Query,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { GroupService } from './group.service';
 import { CreateGroupDto } from './create-group.dto';
 import { UpdateGroupDto } from './update-group.dto';
-import { PaginationDto } from '../paging/pagination.dto';
-import { FilteringDto } from '../filtering/filtering.dto';
-import type { Group } from '@prisma/client';
+import { PaginationDto } from '../helpers/pagination.dto';
+import { FilteringDto } from '../helpers/filtering.dto';
+import type { Group, User } from '@prisma/client'
+import { ApiOperation, ApiParam, ApiTags }     from '@nestjs/swagger';
+@ApiTags('groups')
 @Controller('groups')
 export class GroupController {
   constructor(private readonly groupService: GroupService) {}
@@ -42,5 +45,27 @@ update(
   remove(@Param('id') id: string): Promise<Group> {
     return this.groupService.deleteGroup(+id);
   }
-
+@ApiOperation({ summary: 'Belirli bir grubun üyelerini listele (sayfalı & filtreli)' })
+  @ApiParam({ name: 'id', description: 'Grup ID’si', example: 3 })
+  @Get(':id/members')
+  async getGroupMembers(
+    @Param('id', ParseIntPipe) id: number,
+    @Query() pagination: PaginationDto,
+    @Query() filter: FilteringDto,
+  ): Promise<{
+    items: User[];
+    meta: {
+      totalItems: number;
+      itemCount: number;
+      perPage: number;
+      totalPages: number;
+      currentPage: number;
+    };
+  }> {
+    const { items, meta } = await this.groupService.findMembers(id, {
+      pagination,
+      filter,
+    });
+    return { items, meta };
+  }
 }

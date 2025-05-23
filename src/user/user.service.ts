@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Prisma, User } from '@prisma/client';
-import { PaginationDto } from '../paging/pagination.dto';
-import { FilteringDto } from '../filtering/filtering.dto';
-import { PaginatedResult } from 'src/paging/paginated.results';
+import { PaginationDto } from '../helpers/pagination.dto';
+import { FilteringDto } from '../helpers/filtering.dto';
+import { PaginatedResult } from 'src/helpers/paginated.results';
 import type { GroupMember } from '@prisma/client';
 
 

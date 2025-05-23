@@ -13,8 +13,8 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto } from './create-user.dto';
 import { UpdateUserDto } from './update-user.dto';
-import { PaginationDto } from '../paging/pagination.dto';
-import { FilteringDto } from '../filtering/filtering.dto';
+import { PaginationDto } from '../helpers/pagination.dto';
+import { FilteringDto } from '../helpers/filtering.dto';
 import type { User } from '@prisma/client';
 
 import { ApiOperation, ApiParam, ApiTags }     from '@nestjs/swagger';
