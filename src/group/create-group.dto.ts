@@ -1,14 +1,17 @@
-import { IsOptional,IsString} from "class-validator";
+import { IsInt, IsNotEmpty, IsOptional,IsString} from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 export class CreateGroupDto {
     @ApiProperty({ example: 'Kaplanlar' })
     @IsString()
-    name: string;
+    @IsNotEmpty()
+    username: string;
     
     @ApiProperty({ example: 'Aile Grubu' })
     @IsOptional()
     @IsString()
     description?: string;
-    username: string;
+    @ApiProperty({ example: 1 })
+    @IsInt()
+    @IsNotEmpty()
     userId: number;
     }

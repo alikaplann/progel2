@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Prisma, User } from '@prisma/client';
 import { PaginationDto } from '../paging/pagination.dto';
 import { FilteringDto } from '../filtering/filtering.dto';
 import { PaginatedResult } from 'src/paging/paginated.results';
+import type { GroupMember } from '@prisma/client';
 
 
 @Injectable()
@@ -68,5 +69,24 @@ export class UserService {
   async removeUser(id: number): Promise<User> {
     return this.prisma.user.delete({ where: { id } });
   }
+   async joinGroup(
+    userId: number,
+    groupId: number,
+  ): Promise<GroupMember> {
+    const [user, group] = await Promise.all([
+      this.prisma.user.findUnique({ where: { id: userId } }),
+      this.prisma.group.findUnique({ where: { id: groupId } }),
+    ]);
+    if (!user)  throw new NotFoundException(`User ${userId} bulunamadi`);
+    if (!group) throw new NotFoundException(`Group ${groupId} bulunamadi`);
+
+    // Create and return the GroupMember entry
+    return this.prisma.groupMember.create({
+      data: {
+        userId,
+        groupId,
+      },
+    });
 }
 
+}

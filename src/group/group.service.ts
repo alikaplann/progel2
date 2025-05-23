@@ -13,15 +13,16 @@ export class GroupService {
   constructor(private readonly prisma: PrismaService) {}
 
 async createGroup(dto: CreateGroupDto): Promise<Group> {
+  const { username, description, userId } = dto;
   return this.prisma.group.create({
-    data: {
-      descriptions: dto.description,
-      username: dto.username,
-      user: { connect: { id: dto.userId } },
-    },
+   data: {
+  username,
+  descriptions: dto.description,
+  user: { connect: { id: dto.userId } },
+}
   });
+}
 
-  }
 async findOne(id: number): Promise<GroupType | null> {
   return this.prisma.group.findUnique({
     where: { id },

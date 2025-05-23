@@ -8,6 +8,7 @@ import {
   Patch,
   Delete,
   Query,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './create-user.dto';
@@ -16,6 +17,7 @@ import { PaginationDto } from '../paging/pagination.dto';
 import { FilteringDto } from '../filtering/filtering.dto';
 import type { User } from '@prisma/client';
 
+import { ApiOperation, ApiParam, ApiTags }     from '@nestjs/swagger';
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -51,4 +53,18 @@ async findAll(
   remove(@Param('id') id: string): Promise<User> {
     return this.userService.removeUser(+id);
   }
+
+  @ApiOperation({ summary: 'Bir kullaniciyi gruba ekle' })
+  @ApiParam({ name: 'id'    })
+  @ApiParam({ name: 'groupId' })
+  @Post(':id/groups/:groupId')
+  joinGroup(
+    @Param('id', ParseIntPipe)      userId: number,
+    @Param('groupId', ParseIntPipe) groupId: number,
+  ) {
+    return this.userService.joinGroup(userId, groupId);
+  }
 }
+
+
+

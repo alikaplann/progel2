@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-
 }
 
 datasource db {
@@ -13,7 +12,7 @@ enum Role {
   USER
 }
 
- model User {
+model User {
   id        Int      @id @default(autoincrement())
   username  String   @unique
   password  String
@@ -22,15 +21,39 @@ enum Role {
   role      Role     @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  groups Group[]
- }
 
- model Group {
-  id Int @id @default(autoincrement())
-  username String @unique
+  /// Bu kullanıcı tarafından oluşturulan gruplar
+  groups Group[] @relation("GroupCreator")
+
+  /// Bu kullanıcının üye olduğu gruplar
+  memberships GroupMember[] @relation("UserMemberships")
+}
+
+model Group {
+  id           Int      @id @default(autoincrement())
+  username     String
   descriptions String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user User @relation(fields:[userId],references:[id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  /// Grubu oluşturan user
+  user   User @relation("GroupCreator", fields: [userId], references: [id])
   userId Int
- }
+
+  /// Bu grubun üyeleri
+  memberships GroupMember[] @relation("GroupMemberships")
+}
+
+model GroupMember {
+  /// Kullanıcı tarafı
+  user   User @relation("UserMemberships", fields: [userId], references: [id])
+  userId Int
+
+  /// Grup tarafı
+  group   Group @relation("GroupMemberships", fields: [groupId], references: [id])
+  groupId Int
+
+  joinedAt DateTime @default(now())
+
+  @@id([userId, groupId])
+}
