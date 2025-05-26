@@ -95,18 +95,18 @@ async findMembers(
       filter:     FilteringDto;
     },
   ): Promise<PaginatedResult<User>> {
-    // 1️⃣ Grup var mı kontrolü
+    // Grup var mı kontrolü
     const group = await this.prisma.group.findUnique({ where: { id: groupId } });
     if (!group) {
       throw new NotFoundException(`Group with id ${groupId} not found`);
     }
 
-    // 2️⃣ Pagination ayarları
+    // Pagination ayarları
     const { page = 1, perPage = 10 } = opts.pagination;
     const skip = (page - 1) * perPage;
     const take = perPage;
 
-    // 3️⃣ Dinamik filtreler (username, email, role)
+    // Dinamik filtreler (username, email, role)
     const userWhere: Record<string, any> = {};
     if (opts.filter.username) {
       userWhere.username = { contains: opts.filter.username, mode: 'insensitive' };
@@ -118,12 +118,12 @@ async findMembers(
       userWhere.role = opts.filter.role;
     }
 
-    // 4️⃣ Toplam kayıt sayısını al
+    //  Toplam kayıt sayısını al
     const totalItems = await this.prisma.groupMember.count({
       where: { groupId, user: userWhere },
     });
 
-    // 5️⃣ Üyeleri çek, include ile user bilgisini al
+    //  Üyeleri çek, include ile user bilgisini al
     const members = await this.prisma.groupMember.findMany({
       where: { groupId, user: userWhere },
       skip,
@@ -132,10 +132,10 @@ async findMembers(
       include: { user: true },
     });
 
-    // 6️⃣ Sadece user objelerini al
+    //  Sadece user objelerini al
     const items = members.map(m => m.user);
 
-    // 7️⃣ Meta bilgisini hazırla
+    //  Meta bilgisini hazırla
     const totalPages = Math.ceil(totalItems / perPage);
     const meta = {
       totalItems,

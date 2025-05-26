@@ -80,7 +80,6 @@ export class UserService {
     if (!user)  throw new NotFoundException(`User ${userId} bulunamadi`);
     if (!group) throw new NotFoundException(`Group ${groupId} bulunamadi`);
 
-    // Create and return the GroupMember entry
     return this.prisma.groupMember.create({
       data: {
         userId,
