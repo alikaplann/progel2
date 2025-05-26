@@ -2,6 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { IsOptional, IsString } from "class-validator";
 
 export class UpdateGroupDto {
+   
     @ApiProperty({ example: 'Kaplanlar' })
     @IsOptional()
     @IsString()
@@ -10,5 +11,5 @@ export class UpdateGroupDto {
     @ApiProperty({ example: 'Aile Grubu' })
     @IsOptional()
     @IsString()
-    description?: string;
+    descriptions?: string;
 }
