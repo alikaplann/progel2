@@ -16,7 +16,7 @@ import { UpdateGroupDto } from './update-group.dto';
 import { PaginationDto } from '../helpers/pagination.dto';
 import { FilteringDto } from '../helpers/filtering.dto';
 import type { Group, User } from '@prisma/client'
-import { ApiOperation, ApiBadRequestResponse,ApiParam, ApiTags }     from '@nestjs/swagger';
+import { ApiOperation,ApiOkResponse,ApiCreatedResponse, ApiBadRequestResponse,ApiParam, ApiTags, ApiNotFoundResponse }     from '@nestjs/swagger';
 @ApiTags('groups')
 @Controller('groups')
 export class GroupController {
@@ -32,12 +32,19 @@ export class GroupController {
         error: 'Bad Request'
       }
     } })
-  
+  @ApiCreatedResponse({
+  description: 'Kullanıcı başarıyla oluşturuldu',
+  type: CreateGroupDto,        
+})
  @Post('create')
  create(@Body() dto: CreateGroupDto): Promise<Group> {
    return this.groupService.createGroup(dto);
  }
-
+@ApiOkResponse({
+  description: 'Grup başarıyla listelendi',type: [CreateGroupDto],
+})
+@ApiNotFoundResponse({
+  description: 'Grup bulunamadı'})
 @Get('list')
 async findAll(
   @Query() pagination: PaginationDto,
