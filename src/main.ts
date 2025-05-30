@@ -1,18 +1,18 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import * as dotenv from 'dotenv';
 import { Request, Response } from 'express';
-
+import { CacheInterceptor,CacheModule, CACHE_MANAGER } from '@nestjs/cache-manager';
 async function bootstrap() {
   // Load environment variables
   dotenv.config();
 
   // Create Nest application
   const app = await NestFactory.create(AppModule);
-
-  // Apply global validation pipe
+  const cacheManager = app.get(CACHE_MANAGER);
+  const reflector = app.get(Reflector);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true,transform: true,
     forbidNonWhitelisted: true, }));
 
@@ -39,9 +39,9 @@ async function bootstrap() {
     )
     .build();
 
-  // Create Swagger document
+  // Create Swagger 
   const document = SwaggerModule.createDocument(app, config);
-
+  app.useGlobalInterceptors(new CacheInterceptor(cacheManager, reflector));
   // Serve JSON spec
   app.use('/users-json', (req: Request, res: Response) => {
     res.json(document);
