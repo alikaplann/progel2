@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: projel2
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  app:
+    build:
+      context: .
+      target: runner          
+    ports:
+      - "8080:8080"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgres://postgres:postgres@db:5432/projel2
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your_jwt_secret
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - .:/app               # Kod değiştikçe otomatik reload için
+    command: npm run start:dev
+
+volumes:
+  db_data:
+    driver: local

@@ -17,9 +17,11 @@ describe('NotificationController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [NotificationController],
+      providers: [{ provide: NotificationService, useValue: mockNotification },],
     }).compile();
 
     controller = module.get<NotificationController>(NotificationController);
+    service = module.get<NotificationService>(NotificationService);
   });
 
   it('should be defined', () => {
