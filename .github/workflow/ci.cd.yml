@@ -1,0 +1,102 @@
+name: CI_CD_Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  # ── 1) CI: Lint → Test → Build ────────────────────────────────────
+  build_test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm test -- --coverage
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Build app (TypeScript → JavaScript)
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-folder
+          path: dist
+
+  # ── 2) Build & Push Docker Image to Docker Hub ───────────────────
+  docker_build_and_push:
+    needs: build_test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USER }}/progel2:latest
+
+  # ── 3) Deploy to Remote Server via SSH ───────────────────────────
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: docker_build_and_push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup SSH key
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Deploy via SSH
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+            cd ~/progel2
+            # Eski container varsa durdurup sil
+            docker stop projel2-app    || true
+            docker rm   projel2-app    || true
+
+            # En son image'ı çek
+            docker pull ${{ secrets.DOCKERHUB_USER }}/progel2:latest
+
+            # Ortam değişkenleri (kontrol edin)
+            export DATABASE_URL="${{ secrets.DATABASE_URL }}"
+            export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+
+            # Yeni container'ı ayağa kaldır
+            docker run -d \
+              --name projel2-app \
+              --restart always \
+              -p 8080:8080 \
+              -e DATABASE_URL="$DATABASE_URL" \
+              -e JWT_SECRET="$JWT_SECRET" \
+              ${{ secrets.DOCKERHUB_USER }}/progel2:latest
+          EOF
