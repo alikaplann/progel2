@@ -35,4 +35,3 @@ dotenv.config(); // .env dosyasını yüklemek için
   providers: [AppService],
 })
 export class AppModule {}
-

@@ -1,28 +1,37 @@
-import { NestFactory, Reflector } from '@nestjs/core';
+// main.ts
+
+import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import * as dotenv from 'dotenv';
 import { Request, Response } from 'express';
-import { CacheInterceptor,CacheModule, CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Reflector, HttpAdapterHost } from '@nestjs/core';
+import { CACHE_MANAGER, CacheInterceptor } from '@nestjs/cache-manager';
+
 async function bootstrap() {
   dotenv.config();
 
-  // Create Nest application
+  // 1. Nest uygulamasını yaratın
   const app = await NestFactory.create(AppModule);
-  const cacheManager = app.get(CACHE_MANAGER);
-  const reflector = app.get(Reflector);
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true,transform: true,
-    forbidNonWhitelisted: true, }));
 
-  // Configure Swagger
+  // 2. Bir ValidationPipe ekleyin
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+    })
+  );
+
+  // 3. Swagger yapılandırması (isteğe bağlı)
   const config = new DocumentBuilder()
     .setTitle('Nest-Prisma-Auth API')
     .setDescription('User & Auth endpoints')
     .setVersion('1.0')
     .addBearerAuth(
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
-      'access-token',
+      'access-token'
     )
     .addOAuth2(
       {
@@ -34,13 +43,13 @@ async function bootstrap() {
           },
         },
       },
-      'oauth2-password',
+      'oauth2-password'
     )
     .build();
 
-  // Create Swagger 
   const document = SwaggerModule.createDocument(app, config);
-  app.useGlobalInterceptors(new CacheInterceptor(cacheManager, reflector));
+
+  // 4. “/users-json” endpoint’ini ekleyin (isteğe bağlı)
   app.use('/users-json', (req: Request, res: Response) => {
     res.json(document);
   });
@@ -56,6 +65,3 @@ async function bootstrap() {
 }
 
 bootstrap();
-
-
-

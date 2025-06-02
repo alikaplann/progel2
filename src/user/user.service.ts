@@ -7,8 +7,9 @@ import { PaginatedResult } from 'src/helpers/paginated.results';
 import type { GroupMember } from '@prisma/client';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {Cache} from 'cache-manager';
-
-
+import { Group } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
+import { BadRequestException } from '@nestjs/common/exceptions/bad-request.exception';
 @Injectable()
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
@@ -93,5 +94,60 @@ export class UserService {
       },
     });
 }
+async updatePassword(
+  email: string,
+  oldPassword: string,
+  newPassword: string
+): Promise<Omit<User, 'password'>> {
 
+  const user = await this.prisma.user.findUnique({
+    where: { email },
+    select: {
+      id: true,
+      email: true,
+      password: true,  
+
+    },
+  });
+
+  if (!user) {
+    throw new NotFoundException(`User with email ${email} not found`);
+  }
+
+  if (!oldPassword) {
+    throw new BadRequestException('Eski şifre boş olamaz');
+  }
+
+
+  
+  const isMatch = await bcrypt.compare(oldPassword, user.password);
+  if (!isMatch) {
+    throw new BadRequestException('Eski şifre yanlış');
+  }
+
+
+  const sameAsOld = await bcrypt.compare(newPassword, user.password);
+  if (sameAsOld) {
+    throw new BadRequestException('Yeni şifre, eski şifre ile aynı olamaz');
+  }
+
+
+  const hashedNew = await bcrypt.hash(newPassword, 10);
+  const updatedUser = await this.prisma.user.update({
+    where: { email },
+    data: { password: hashedNew },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      age: true,
+      role: true,
+      createdAt: true,
+      updatedAt: true,
+
+    },
+  });
+
+  return updatedUser;
+}
 }

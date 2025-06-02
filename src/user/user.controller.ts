@@ -18,8 +18,9 @@ import { PaginationDto } from '../helpers/pagination.dto';
 import { FilteringDto } from '../helpers/filtering.dto';
 import { CacheInterceptor,CacheKey,CacheTTL } from '@nestjs/cache-manager';
 import type { User } from '@prisma/client';
-
+import { BadRequestException } from '@nestjs/common/exceptions/bad-request.exception';
 import { ApiOperation, ApiParam, ApiTags }     from '@nestjs/swagger';
+import { UpdatePasswordDto } from './update-password.dto';
 @Controller('users')
 @UseInterceptors(CacheInterceptor)
 export class UserController {
@@ -71,7 +72,20 @@ async findAll(
   ) {
     return this.userService.joinGroup(userId, groupId);
   }
-}
+@Patch('email/password')
+  async updatePassword(
+    @Param('email') email: string,
+    @Body() dto: UpdatePasswordDto 
+  ) {
+    const { oldPassword, newPassword } = dto;
 
+
+    if (!oldPassword || !newPassword) {
+      throw new BadRequestException('oldPassword ve newPassword gereklidir');
+    }
+
+    return this.userService.updatePassword(email, oldPassword, newPassword);
+  }
+}
 
 
