@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable,Inject } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma} from '@prisma/client';
 import type { Group, Group as GroupType } from '@prisma/client';
@@ -8,13 +8,16 @@ import { CreateGroupDto } from './create-group.dto';
 import { PaginatedResult } from 'src/helpers/paginated.results';
 import { NotFoundException } from '@nestjs/common';
 import type { User } from '@prisma/client';
+import { Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()
 export class GroupService {
   constructor(private readonly prisma: PrismaService) {}
-
+@Inject(CACHE_MANAGER) private readonly cacheManager: Cache;
 async createGroup(dto: CreateGroupDto): Promise<Group> {
   const { username, description, userId } = dto;
+  await this.cacheManager.del('groups_list'); 
   return this.prisma.group.create({
    data: {
   username,
@@ -31,12 +34,15 @@ async findOne(id: number): Promise<GroupType | null> {
 }
 
 async updateGroup(id: number, data: Prisma.GroupUpdateInput): Promise<GroupType> {
+ await this.cacheManager.del('groups_list');
   return this.prisma.group.update({
     where: { id },
     data: data,
   });
 }
 async deleteGroup(id: number): Promise<GroupType> {
+  await this.cacheManager.del('groups_list');
+  await this.cacheManager.del(`group_${id}`);
   return this.prisma.group.delete({
     where: { id },
   });
@@ -76,6 +82,7 @@ async findAll(opts: {
     };
   }
 async listAllMembers(id: number): Promise<GroupType | null> {
+  await this.cacheManager.del(`group_${id}`);
   return this.prisma.group.findUnique({
     where: { id },
     include: {

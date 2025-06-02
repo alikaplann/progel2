@@ -1,17 +1,20 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable,Inject, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Prisma, User } from '@prisma/client';
 import { PaginationDto } from '../helpers/pagination.dto';
 import { FilteringDto } from '../helpers/filtering.dto';
 import { PaginatedResult } from 'src/helpers/paginated.results';
 import type { GroupMember } from '@prisma/client';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import {Cache} from 'cache-manager';
 
 
 @Injectable()
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
-
+  @Inject(CACHE_MANAGER) private readonly cacheManager: Cache;
   async createUser(data: Prisma.UserCreateInput): Promise<User> {
+    await this.cacheManager.del('users_list'); 
     return this.prisma.user.create({ data });
   }
 
@@ -60,6 +63,7 @@ export class UserService {
   }
 
   async updateUser(id: number, data: Prisma.UserUpdateInput): Promise<User> {
+    await this.cacheManager.del('users_list'); 
     return this.prisma.user.update({
       where: { id },
       data,
@@ -67,6 +71,8 @@ export class UserService {
   }
 
   async removeUser(id: number): Promise<User> {
+    await this.cacheManager.del('users_list'); 
+    await this.cacheManager.del(`user_${id}`);
     return this.prisma.user.delete({ where: { id } });
   }
    async joinGroup(
