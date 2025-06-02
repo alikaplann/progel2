@@ -84,7 +84,7 @@ jobs:
             docker stop projel2-app    || true
             docker rm   projel2-app    || true
 
-            # En son image'ı çek
+            # En son image'i çek
             docker pull ${{ secrets.DOCKERHUB_USER }}/progel2:latest
 
             # Ortam değişkenleri (kontrol edin)
