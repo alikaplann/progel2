@@ -24,8 +24,8 @@ dotenv.config(); // .env dosyasını yüklemek için
       store: redisStore,
       host: process.env.REDIS_HOST || 'localhost',
       port: +(process.env.REDIS_PORT || 6379),
-      ttl: 60,                // default 30 saniye
-      db: 0,                  // opsiyonel, DB numarası
+      ttl: 60,                
+      db: 0,                  
     }),
     NotificationModule,
     // API yollarını hariç tut

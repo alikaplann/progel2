@@ -6,7 +6,6 @@ import * as dotenv from 'dotenv';
 import { Request, Response } from 'express';
 import { CacheInterceptor,CacheModule, CACHE_MANAGER } from '@nestjs/cache-manager';
 async function bootstrap() {
-  // Load environment variables
   dotenv.config();
 
   // Create Nest application
@@ -42,19 +41,16 @@ async function bootstrap() {
   // Create Swagger 
   const document = SwaggerModule.createDocument(app, config);
   app.useGlobalInterceptors(new CacheInterceptor(cacheManager, reflector));
-  // Serve JSON spec
   app.use('/users-json', (req: Request, res: Response) => {
     res.json(document);
   });
 
-  // Setup Swagger UI at '/users', pointing to the JSON spec
   SwaggerModule.setup('users', app, document, {
     swaggerOptions: {
       url: '/users-json',
     },
   });
 
-  // Start server
   await app.listen(8080);
   console.log(`Application is running on: ${await app.getUrl()}`);
 }

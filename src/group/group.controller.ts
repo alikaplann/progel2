@@ -8,7 +8,7 @@ import {
   Delete,
   Query,
   ParseIntPipe,
-  BadRequestException,
+  UseInterceptors,
 } from '@nestjs/common';
 import { GroupService } from './group.service';
 import { CreateGroupDto } from './create-group.dto';
@@ -16,6 +16,7 @@ import { UpdateGroupDto } from './update-group.dto';
 import { PaginationDto } from '../helpers/pagination.dto';
 import { FilteringDto } from '../helpers/filtering.dto';
 import type { Group, User } from '@prisma/client'
+import { CacheInterceptor, CacheKey, CacheTTL } from '@nestjs/cache-manager';
 import { ApiOperation,ApiOkResponse,ApiCreatedResponse, ApiBadRequestResponse,ApiParam, ApiTags, ApiNotFoundResponse }     from '@nestjs/swagger';
 @ApiTags('groups')
 @Controller('groups')
@@ -46,6 +47,8 @@ export class GroupController {
 @ApiNotFoundResponse({
   description: 'Grup bulunamadı'})
 @Get('list')
+@CacheKey('groups_list')
+@CacheTTL(10) 
 async findAll(
   @Query() pagination: PaginationDto,
   @Query() filter: FilteringDto,
@@ -63,6 +66,8 @@ async findAll(
     }
   })
 @Get(':id')
+@CacheKey('group_by_id')
+@CacheTTL(10)
 findOne(@Param('id') id: string): Promise<Group | null> {
   return this.groupService.findOne(+id);}
 @Patch('update/:id')
@@ -78,6 +83,8 @@ update(
 @ApiOperation({ summary: 'Belirli bir grubun üyelerini listeleme' })
   @ApiParam({ name: 'id', description: 'Grup ID’si', example: 3 })
   @Get(':id/members')
+  @CacheKey('group_members')
+  @CacheTTL(10)
   async getGroupMembers(
     @Param('id', ParseIntPipe) id: number,
     @Query() pagination: PaginationDto,

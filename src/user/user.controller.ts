@@ -6,6 +6,7 @@ import {
   Body,
   Param,
   Patch,
+  UseInterceptors,
   Delete,
   Query,
   ParseIntPipe,
@@ -15,10 +16,12 @@ import { CreateUserDto } from './create-user.dto';
 import { UpdateUserDto } from './update-user.dto';
 import { PaginationDto } from '../helpers/pagination.dto';
 import { FilteringDto } from '../helpers/filtering.dto';
+import { CacheInterceptor,CacheKey,CacheTTL } from '@nestjs/cache-manager';
 import type { User } from '@prisma/client';
 
 import { ApiOperation, ApiParam, ApiTags }     from '@nestjs/swagger';
 @Controller('users')
+@UseInterceptors(CacheInterceptor)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -28,6 +31,8 @@ export class UserController {
   }
 
   @Get('list')
+  @CacheKey('users_list')
+  @CacheTTL(10)  
 async findAll(
   @Query() pagination: PaginationDto,
   @Query() filter: FilteringDto,
@@ -37,6 +42,8 @@ async findAll(
 }
 
   @Get(':id')
+  @CacheKey('user_by_id')
+  @CacheTTL(10)
   findOne(@Param('id') id: string): Promise<User | null> {
     return this.userService.findOne(+id);
   }
