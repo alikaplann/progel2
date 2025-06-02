@@ -25,7 +25,8 @@ dotenv.config(); // .env dosyasını yüklemek için
       host: process.env.REDIS_HOST || 'localhost',
       port: +(process.env.REDIS_PORT || 6379),
       ttl: 60,                
-      db: 0,                  
+      db: 0, 
+      isGlobal: true, // Cache'i global olarak kullanmak için                 
     }),
     NotificationModule,
     // API yollarını hariç tut
